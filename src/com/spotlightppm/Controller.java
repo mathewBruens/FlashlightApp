@@ -1,122 +1,67 @@
 package com.spotlightppm;
 
-
 import com.github.sarxos.webcam.Webcam;
 import java.awt.AWTException;
 import java.io.IOException;
-import java.util.concurrent.TimeoutException;
-import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 import com.github.sarxos.webcam.WebcamException;
 import java.awt.GraphicsDevice;
+import java.util.Timer;
+
+import java.util.TimerTask;
+import java.util.logging.Level;
+import org.jnativehook.GlobalScreen;
+import org.jnativehook.NativeHookException;
 
 public class Controller implements LoginSuccessListener, SettingsListener {
 
-    RemoteUserSettings remoteUserSettings;
     Thread inputTrackerThread;
     Thread screenCaptureThread;
     Thread webcamCaptureThread;
     GraphicsDevice activeScreen;
     Webcam activeWebcam;
     FlashliteSystemTray tray;
+    Timer timer;
+    InputTracker tracker;
 
     public static void main(String[] args) {
         new Controller();
+
     }
 
     public Controller() {
         new LoginGUI(this);
-        remoteUserSettings = new RemoteUserSettings();
-//        login();
-//        initSettings();
-//        startSettingsGUI();
-//        startSystemTrayGUI();
-//        runFlashlight();
+
     }
 
-    private void login() {
-    }
-
-    private void initSettings() {
-    }
-
-//    Settings settings;
-//    UserSettings userSettings;
-//    FlashliteSystemTray tray;
-//
-//    private final long MIN_INTERVAL = 5000;
-//    private final static Logger LOGGER = Logger
-//            .getLogger(Logger.GLOBAL_LOGGER_NAME);
-//    private FileHandler log;
-//
-//    private final long MAX_INTERVAL = 15000;
-//    
-//    public Controller() {
-//        try {
-//            String fileSeparator = System.getProperty("file.separator");
-//            String userHomeFolder = System.getProperty("user.home");
-//            String desktopPath = userHomeFolder.concat(fileSeparator).concat(
-//                    "Desktop\\FlashlightDocs\\Log.txt");
-//            log = new FileHandler(desktopPath);
-//            LOGGER.addHandler(log);
-//            settings = new Settings();
-//        } catch (WebcamException e) {
-//            TODO Auto
-//            -generated  catch block e 
-//            .printStackTrace();
-//        } catch (TimeoutException e) {
-//            TODO Auto
-//            -generated  catch block e 
-//            .printStackTrace();
-//        } catch (SecurityException e) {
-//            TODO Auto
-//            -generated  catch block e 
-//            .printStackTrace();
-//        } catch (IOException e) {
-//            TODO Auto
-//            -generated  catch block e 
-//            .printStackTrace();
-//        }
-//
-//        addShutdownHook();
-//
-//        new LoginGUI(settings, this);
-//
-//    }
-//
-//    public void addShutdownHook() {
-//        Runtime.getRuntime().addShutdownHook(new Thread() {
-//
-//            @Override
-//            public void run() {
-//                System.out.println("Flashlite exited.");
-//            }
-//        });
-//    }
     public void startInputTracker() {
+//        
+//               
+        //Records/tracks user keystrokes and user mouse actions
 
-        inputTrackerThread = new Thread(new Runnable() {
+        tracker = new InputTracker();
 
-            InputTracker tracker;
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            public void run() {
+                
+                tracker.unRegister();
+            }
+        });
+
+        long randInterval = (long) ((Math.random() * (RemoteUserSettings.getInstance().getUserStatsMaxInterval() - RemoteUserSettings.getInstance().getUserStatsMinInterval())) + RemoteUserSettings.getInstance().getUserStatsMinInterval());
+
+        timer = new Timer();
+        timer.schedule(new TimerTask() {
 
             @Override
             public void run() {
-
-                while (true) {
-                    //long randInterval = (long) ((Math.random() * (MAX_INTERVAL - MIN_INTERVAL)) + MIN_INTERVAL);
-                    long randInterval = (long) ((Math.random() * (remoteUserSettings.getUserStatsMaxInterval() - remoteUserSettings.getUserStatsMinInterval())) + remoteUserSettings.getUserStatsMinInterval());
-                    tracker = new InputTracker();
-                    try {
-                        Thread.sleep(randInterval);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    System.out.println(tracker.toString());
-                    tracker.unRegister();
-                }
+                tracker.setEndTime();
+                System.out.println(tracker.toString());
+                tracker.makeBarChart();
+                //tracker.unRegister();
+                startInputTracker();
             }
-        });
-        inputTrackerThread.start();
+        }, randInterval);
 
     }
 
@@ -129,11 +74,11 @@ public class Controller implements LoginSuccessListener, SettingsListener {
             public void run() {
                 while (true) {
                     //long randInterval = (long) ((Math.random() * (MAX_INTERVAL - MIN_INTERVAL)) + MIN_INTERVAL);
-                    long randInterval = (long) ((Math.random() * (remoteUserSettings.getScreenshotMaxInterval() - remoteUserSettings.getScreenshotMinInterval())) + remoteUserSettings.getScreenshotMinInterval());
+                    long randInterval = (long) ((Math.random() * (RemoteUserSettings.getInstance().getScreenshotMaxInterval() - RemoteUserSettings.getInstance().getScreenshotMinInterval())) + RemoteUserSettings.getInstance().getScreenshotMinInterval());
                     try {
                         Thread.sleep(randInterval);
                         screenshotCapture = new ScreenshotCapture();
-                        screenshotCapture.takeScreenshot(activeScreen, remoteUserSettings.getScreenshotDimension());
+                        screenshotCapture.takeScreenshot(activeScreen, RemoteUserSettings.getInstance().getScreenshotDimension(), true);
 
                     } catch (InterruptedException | SecurityException | IOException | AWTException e) {
                     }
@@ -160,7 +105,7 @@ public class Controller implements LoginSuccessListener, SettingsListener {
                 WebcamCapture webcam;
                 while (true) {
                     //long randInterval = (long) ((Math.random() * (MAX_INTERVAL - MIN_INTERVAL)) + MIN_INTERVAL);
-                    long randInterval = (long) ((Math.random() * (remoteUserSettings.getWebcamMaxInterval() - remoteUserSettings.getWebcamMinInterval())) + remoteUserSettings.getWebcamMinInterval());
+                    long randInterval = (long) ((Math.random() * (RemoteUserSettings.getInstance().getWebcamMaxInterval() - RemoteUserSettings.getInstance().getWebcamMinInterval())) + RemoteUserSettings.getInstance().getWebcamMinInterval());
                     try {
                         Thread.sleep(randInterval);
                         webcam = new WebcamCapture();
@@ -184,29 +129,27 @@ public class Controller implements LoginSuccessListener, SettingsListener {
     }
 
     public void LoginSuccess() {
-        // userSettings = (new ServerPull()).getUserSettings();
-        getRemoteUserSettings();
+
         new LocalSettingsGUI(this);
-
-        //startSystemTray();
-//        startInputTracker();
-//        startScreenCapture();
-//        startWebcamCapture();
+        getRemoteUserSettings();
     }
 
-    public void getRemoteUserSettings() {
+    public boolean getRemoteUserSettings() {
         //add webservice here
-        remoteUserSettings = new RemoteUserSettings();
+        //parse xml or call individual web service methods
+
+        return true;
     }
-//
-//    public void setRemoteSettings(UserSettings userSettings) {
-//    }
+
+    public void setRemoteUserSettings() {
+        activeWebcam.setViewSize(RemoteUserSettings.getInstance().getWebcamDimension());
+    }
 
     @Override
     public void SettingsExit(Webcam activeWebcam, GraphicsDevice activeScreen) {
         this.activeWebcam = activeWebcam;
         this.activeScreen = activeScreen;
-        
+        setRemoteUserSettings();
         startSystemTray();
         startInputTracker();
         startScreenCapture();

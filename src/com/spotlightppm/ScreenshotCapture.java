@@ -17,7 +17,7 @@ public class ScreenshotCapture {
 
     private BufferedImage getScaledImage(BufferedImage srcImg, int w, int h) {
 
-         float aspectRatio = (float)srcImg.getWidth() / (float) srcImg.getHeight();
+         //float aspectRatio = (float)srcImg.getWidth() / (float) srcImg.getHeight();
 
         BufferedImage resizedImg = new BufferedImage(w, h, 1);
         // BufferedImage.TRANSLUCENT);
@@ -30,7 +30,7 @@ public class ScreenshotCapture {
         return resizedImg;
     }
 
-    public void takeScreenshot(GraphicsDevice activeScreen, Dimension dimension) throws IOException, AWTException,
+    public BufferedImage takeScreenshot(GraphicsDevice activeScreen, Dimension dimension, Boolean IOWrite) throws IOException, AWTException,
             SecurityException {
         SimpleDateFormat formatter = new SimpleDateFormat(
                 "MM_dd_yyyy@hh_mm_ssa_z");
@@ -40,6 +40,9 @@ public class ScreenshotCapture {
         String userHomeFolder = System.getProperty("user.home");
         String desktopPath = userHomeFolder.concat(fileSeparator).concat(
                 "Desktop").concat(fileSeparator).concat("FlashlightData");
+        
+        String path = "FlashlightData".concat(fileSeparator);
+        
 
         robot = new Robot(activeScreen);
         BufferedImage screenShot = robot.createScreenCapture(new Rectangle(
@@ -50,15 +53,19 @@ public class ScreenshotCapture {
 
         // I think equals needs to be overridded to compare two dimensions
         //This doesn't scale well for images on a 1680 X 1050 screen
-        if (!(Toolkit.getDefaultToolkit().getScreenSize().equals(dimension))) {
+        //if (Toolkit.getDefaultToolkit().getScreenSize() != (dimension)) {
             screenShot = getScaledImage(screenShot, (int) dimension.getWidth(), (int) dimension.getHeight());
-        }
+        //}
 
         String screenShotFileName = formatter.format(now.getTime()).concat(
                 ".jpg");
-
-        ImageIO.write(screenShot, "JPG", new File(desktopPath,
-                screenShotFileName));
-
+        
+//        ImageIO.write(screenShot, "JPG", new File(desktopPath,
+//                screenShotFileName));
+        if(IOWrite){
+        ImageIO.write(screenShot, "JPG", new File(path, screenShotFileName));
+        }
+        
+        return screenShot;
     }
 }

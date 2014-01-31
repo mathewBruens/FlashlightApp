@@ -11,15 +11,18 @@ public class LoginGUI extends javax.swing.JFrame {
     public LoginGUI(LoginSuccessListener listener) {
         localUserSettings = LocalUserSettings.getInstance();
         listeners = new ArrayList<>();
-        addListener(listener);
+        listeners.add(listener);
         initComponents();
+        //Ff there is a username and password saved in the XML file, defined in LocalUserSettings,
+        //set remember-me to true and fill-in the username and password into the text fields.
+        //the XML file is in the curreent directory "UserSettings.XML"
 
         if (localUserSettings.getUsername() != "" && localUserSettings.getPassword() != "") {
             jCheckBox1.setSelected(true);
             jTextField1.setText(localUserSettings.getUsername());
             jPasswordField1.setText(localUserSettings.getPassword());
         }
-
+        this.setLocationRelativeTo(null);
         setVisible(true);
     }
 
@@ -29,8 +32,12 @@ public class LoginGUI extends javax.swing.JFrame {
     }
 
     private void loginSuccess() {
+        String newUsername = jTextField1.getText();
+        String newPassword = new String(jPasswordField1.getPassword());
+        dispose();
         if (jCheckBox1.isSelected()) {
-            localUserSettings.writeLoginCredentials(jTextField1.getText(), new String(jPasswordField1.getPassword()));
+            //write to the XML file defined in LocalUserSettings.java
+            localUserSettings.writeLoginCredentials(newUsername, newPassword);
         } else {
             localUserSettings.writeLoginCredentials("", "");
         }
@@ -38,14 +45,10 @@ public class LoginGUI extends javax.swing.JFrame {
         for (LoginSuccessListener l : listeners) {
             l.LoginSuccess();
         }
-        dispose();
+
     }
 
     private void loginFailure() {
-    }
-
-    private void addListener(LoginSuccessListener listener) {
-        listeners.add(listener);
     }
 
     @SuppressWarnings("unchecked")

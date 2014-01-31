@@ -49,7 +49,6 @@ public class LocalUserSettings {
     public static LocalUserSettings getInstance() {
         return NewSingletonHolder.INSTANCE;
 
-
     }
 
     private static class NewSingletonHolder {
@@ -69,35 +68,48 @@ public class LocalUserSettings {
         return screenName;
     }
 
-    public void writeWebcamName(String newWebcam) {
-        webcamName = newWebcam;
+    public void writeWebcamName(final String newWebcam) {
 
-        try {
-            Document doc = docBuilder.parse(file);
+        Thread t = new Thread() {
+            public void run() {
+                webcamName = newWebcam;
 
-            Node webcamNode = doc.getDocumentElement().getElementsByTagName("webcam").item(0);
+                try {
+                    Document doc = docBuilder.parse(file);
 
-            webcamNode.setTextContent(webcamName);
+                    Node webcamNode = doc.getDocumentElement().getElementsByTagName("webcam").item(0);
 
-            fileWrite(doc);
-        } catch (SAXException | IOException ex) {
-            //Logger.getLogger(LoginXML.class.getName()).log(Level.SEVERE, null, ex);
-        }
+                    webcamNode.setTextContent(webcamName);
+
+                    fileWrite(doc);
+                } catch (SAXException | IOException ex) {
+                    //Logger.getLogger(LoginXML.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        };
+        t.start();
     }
 
-    public void writeScreenName(String newScreen) {
-        screenName = newScreen;
-        try {
-            Document doc = docBuilder.parse(file);
+    public void writeScreenName(final String newScreen) {
 
-            Node webcamNode = doc.getDocumentElement().getElementsByTagName("screen").item(0);
+        Thread t = new Thread() {
 
-            webcamNode.setTextContent(screenName);
+            public void run() {
+                screenName = newScreen;
+                try {
+                    Document doc = docBuilder.parse(file);
 
-            fileWrite(doc);
-        } catch (SAXException | IOException ex) {
-            //Logger.getLogger(LoginXML.class.getName()).log(Level.SEVERE, null, ex);
-        }
+                    Node webcamNode = doc.getDocumentElement().getElementsByTagName("screen").item(0);
+
+                    webcamNode.setTextContent(screenName);
+
+                    fileWrite(doc);
+                } catch (SAXException | IOException ex) {
+                    //Logger.getLogger(LoginXML.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        };
+        t.start();
     }
 
     public String getPassword() {
@@ -113,9 +125,13 @@ public class LocalUserSettings {
                 Document doc = docBuilder.parse(file);
                 Node usernameNode = doc.getDocumentElement().getElementsByTagName("username").item(0);
                 Node passwordNode = doc.getDocumentElement().getElementsByTagName("password").item(0);
+                Node screenNode = doc.getDocumentElement().getElementsByTagName("screen").item(0);
+                Node webcamNode = doc.getDocumentElement().getElementsByTagName("webcam").item(0);
                 username = usernameNode.getTextContent();
                 password = passwordNode.getTextContent();
-
+                webcamName = webcamNode.getTextContent();
+                screenName = screenNode.getTextContent();
+                
             } catch (SAXException | IOException ex) {
                 // Logger.getLogger(LocalUserSettingsXML.class.getName()).log(Level.SEVERE, null, ex);
             }

@@ -17,45 +17,6 @@ import java.io.ByteArrayOutputStream;
 public class WebcamCapture {
 	
 
-	public WebcamCapture() {
-		
-
-	}
-
-	//
-	//
-	// webcamsImageSizes = new HashMap<Integer, Dimension[]>();
-	//
-	// Integer index = 0;
-	// for (Webcam webcam : webcamList) {
-	// Dimension[] webcamSizes = getWebcamSizes(webcam);
-	// webcamsImageSizes.put(index, webcamSizes);
-	// index++;
-	// }
-	//
-	// }
-
-	// public HashMap<Integer, Dimension[]> getWebcamsImageSizes() {
-	// return webcamsImageSizes;
-	// }
-	//
-	// public Dimension[] getWebcamSizes(Webcam webcam) {
-	// return webcam.getViewSizes();
-	// }
-	//
-	// public synchronized void setWebcam(int webcamIndex) {
-	// this.webcamIndex = webcamIndex;
-	//
-	// currentWebcam = webcamList.get(webcamIndex);
-	// }
-	//
-	// public synchronized void setWebcamSize(int webcamSizeIndex) {
-	//
-	// Dimension[] resolutionArray = webcamsImageSizes.get(new Integer(
-	// webcamIndex));
-	// currentWebcam.setViewSize(resolutionArray[webcamSizeIndex]);
-	// }
-
 	public void takeWebcamPhoto(Webcam activeWebcam) throws IOException, WebcamException {
 		BufferedImage bi = null;
 
@@ -80,14 +41,14 @@ public class WebcamCapture {
 		String userHomeFolder = System.getProperty("user.home");
 		String desktopPath = userHomeFolder.concat(fileSeparator).concat(
 				"Desktop\\FlashlightDocs");
-
-		String screenShotFileName = formatter.format(now.getTime()).concat(
-				".jpg");
+                      String path = "FlashlightData".concat(fileSeparator);
+        
+		String screenShotFileName = formatter.format(now.getTime()).concat(".jpg");
 		String prefix = "Webcam_";
 		screenShotFileName = prefix + screenShotFileName;
 
-		ImageIO.write(bi, "JPG", new File(desktopPath, screenShotFileName));
-                
+		//ImageIO.write(bi, "JPG", new File(desktopPath, screenShotFileName));
+                ImageIO.write(bi, "JPG", new File(path, screenShotFileName));
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 ImageIO.write(bi, "JPG", baos);
                 baos.flush();
